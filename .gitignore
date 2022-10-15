@@ -48,3 +48,4 @@ ui_*.h
 /packages/
 /x64/
 build-*
+*.ipch

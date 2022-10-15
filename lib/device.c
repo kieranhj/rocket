@@ -366,7 +366,7 @@ static int handle_set_key_cmd(SOCKET sock, struct sync_device *data)
 	v.i = ntohl(v.i);
 
 	key.row = ntohl(row);
-	key.value = v.f;
+	key.value = v.i;
 
 	assert(type < KEY_TYPE_COUNT);
 	assert(track < data->num_tracks);

@@ -7,15 +7,16 @@
 
 enum key_type {
 	KEY_STEP,   /* stay constant */
-	KEY_LINEAR, /* lerp to the next value */
-	KEY_SMOOTH, /* smooth curve to the next value */
-	KEY_RAMP,
+	KEY_LINEAR, /* lerp all 32-bits to the next value */
+	KEY_SHORT,  /* lerp top & bottom 16-bits separately to the next value */
+	KEY_BYTE,   /* lerp all bytes separately to the next value */
+	KEY_NIBBLE, /* lerp all nibbles separately to the next value */
 	KEY_TYPE_COUNT
 };
 
 struct track_key {
 	int row;
-	float value;
+	int value;
 	enum key_type type;
 };
 
