@@ -19,6 +19,7 @@
 #endif
 
 #include "../lib/sync.h"
+#include "../lib/track.h"
 
 static const float bpm = 150.0f; /* beats per minute */
 static const int rpb = 8; /* rows per beat */
@@ -173,11 +174,11 @@ int main(int argc, char *argv[])
 #endif
 
 	/* get tracks */
-	const sync_track *clear_r = sync_get_track(rocket, "clear.r");
-	const sync_track *clear_g = sync_get_track(rocket, "clear.g");
-	const sync_track *clear_b = sync_get_track(rocket, "clear.b");
-	const sync_track *cam_rot = sync_get_track(rocket, "camera:rot.y");
-	const sync_track *cam_dist = sync_get_track(rocket, "camera:dist");
+	const sync_track *clear_r = sync_get_track(rocket, "clear.r", TRACK_FLOAT);
+	const sync_track *clear_g = sync_get_track(rocket, "clear.g", TRACK_FLOAT);
+	const sync_track *clear_b = sync_get_track(rocket, "clear.b", TRACK_FLOAT);
+	const sync_track *cam_rot = sync_get_track(rocket, "camera:rot.y", TRACK_FLOAT);
+	const sync_track *cam_dist = sync_get_track(rocket, "camera:dist", TRACK_FLOAT);
 
 	/* let's roll! */
 	BASS_Start();

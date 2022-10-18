@@ -278,6 +278,7 @@ static int read_track_data(struct sync_device *d, struct sync_track *t)
 		return -1;
 
 	d->io_cb.read(&t->num_keys, sizeof(int), 1, fp);
+	d->io_cb.read(&t->type, sizeof(enum track_type), 1, fp);
 	t->keys = malloc(sizeof(struct track_key) * t->num_keys);
 	if (!t->keys)
 		return -1;
@@ -303,6 +304,7 @@ static int save_track(const struct sync_track *t, const char *path)
 		return -1;
 
 	fwrite(&t->num_keys, sizeof(int), 1, fp);
+	fwrite(&t->type, sizeof(enum track_type), 1, fp);
 	for (i = 0; i < (int)t->num_keys; ++i) {
 		char type = (char)t->keys[i].type;
 		fwrite(&t->keys[i].row, sizeof(int), 1, fp);
@@ -329,14 +331,17 @@ static int fetch_track_data(struct sync_device *d, struct sync_track *t)
 {
 	unsigned char cmd = GET_TRACK;
 	uint32_t name_len;
+	uint32_t type;
 
 	assert(strlen(t->name) <= UINT32_MAX);
 	name_len = htonl((uint32_t)strlen(t->name));
+	type = htonl((uint32_t)t->type);
 
 	/* send request data */
 	if (xsend(d->sock, (char *)&cmd, 1, 0) ||
 	    xsend(d->sock, (char *)&name_len, sizeof(name_len), 0) ||
-	    xsend(d->sock, t->name, (int)strlen(t->name), 0))
+	    xsend(d->sock, t->name, (int)strlen(t->name), 0) ||
+		xsend(d->sock, (char*)&type, sizeof(type), 0))
 	{
 		closesocket(d->sock);
 		d->sock = INVALID_SOCKET;
@@ -351,6 +356,8 @@ static int handle_set_key_cmd(SOCKET sock, struct sync_device *data)
 	uint32_t track, row;
 	union {
 		float f;
+		unsigned char e;
+		unsigned short c;
 		uint32_t i;
 	} v;
 	struct track_key key;
@@ -366,7 +373,21 @@ static int handle_set_key_cmd(SOCKET sock, struct sync_device *data)
 	v.i = ntohl(v.i);
 
 	key.row = ntohl(row);
-	key.value = v.f;
+	switch (data->tracks[track]->type)
+	{
+	case TRACK_FLOAT:
+	default:
+		key.value.val = v.f;
+		break;
+
+	case TRACK_EVENT:
+		key.value.event = v.e;
+		break;
+
+	case TRACK_COLOUR:
+		key.value.colour = v.c;
+		break;
+	}
 
 	assert(type < KEY_TYPE_COUNT);
 	assert(track < data->num_tracks);
@@ -483,7 +504,7 @@ sockerr:
 
 #endif /* !defined(SYNC_PLAYER) */
 
-static int create_track(struct sync_device *d, const char *name)
+static int create_track(struct sync_device *d, const char *name, enum track_type type)
 {
 	struct sync_track *t;
 	assert(find_track(d, name) < 0);
@@ -492,6 +513,7 @@ static int create_track(struct sync_device *d, const char *name)
 	t->name = strdup(name);
 	t->keys = NULL;
 	t->num_keys = 0;
+	t->type = type;
 
 	d->num_tracks++;
 	d->tracks = realloc(d->tracks, sizeof(d->tracks[0]) * d->num_tracks);
@@ -501,14 +523,14 @@ static int create_track(struct sync_device *d, const char *name)
 }
 
 const struct sync_track *sync_get_track(struct sync_device *d,
-    const char *name)
+    const char *name, enum track_type type)
 {
 	struct sync_track *t;
 	int idx = find_track(d, name);
 	if (idx >= 0)
 		return d->tracks[idx];
 
-	idx = create_track(d, name);
+	idx = create_track(d, name, type);
 	t = d->tracks[idx];
 
 #ifndef SYNC_PLAYER

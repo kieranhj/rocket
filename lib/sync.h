@@ -21,6 +21,7 @@ extern "C" {
 
 struct sync_device;
 struct sync_track;
+enum track_type;
 
 struct sync_device *sync_create_device(const char *);
 void sync_destroy_device(struct sync_device *);
@@ -45,8 +46,10 @@ struct sync_io_cb {
 };
 void sync_set_io_cb(struct sync_device *d, struct sync_io_cb *cb);
 
-const struct sync_track *sync_get_track(struct sync_device *, const char *);
+const struct sync_track *sync_get_track(struct sync_device *, const char *, enum track_type);
 double sync_get_val(const struct sync_track *, double);
+unsigned char sync_get_event(const struct sync_track*, double);
+unsigned short sync_get_colour(const struct sync_track*, double);
 
 #ifdef __cplusplus
 }
