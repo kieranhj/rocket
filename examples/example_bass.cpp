@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 	}
 
 #ifndef SYNC_PLAYER
-	sync_save_tracks(rocket);
+	sync_save_tracks(rocket, &bass_cb, (void*)& stream);
 #endif
 	sync_destroy_device(rocket);
 
